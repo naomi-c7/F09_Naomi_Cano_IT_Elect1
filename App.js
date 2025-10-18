@@ -1,53 +1,70 @@
-import * as React from 'react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
+  Image,
   TextInput,
   TouchableOpacity,
+  ScrollView,
   StyleSheet,
-  FlatList,
-  Image,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-const Stack = createNativeStackNavigator();
+// Use your own images from assets
+const PROFILE_PIC = require('./assets/naomiformalpic.jpg');
+const MOCK_IMAGE = require('./assets/naomisings.jpg');
 
+// --- 1. HomeScreen ---
 const HomeScreen = ({ navigation }) => {
   return (
     <View style={styles.homeContainer}>
-      <Image
-        source={require('./assets/naomiformalpic.jpg')}
-        style={styles.homeProfilePic}
-      />
-      <Text style={styles.title}>Welcome, Naomi 🌸</Text>
+      <Image source={PROFILE_PIC} style={styles.homeProfilePic} />
+      <Text style={styles.homeTitle}>Welcome, Naomi 🌸</Text>
+
       <TouchableOpacity
         style={styles.homeButton}
         onPress={() => navigation.navigate('CommentBox')}
       >
-        <Text style={styles.buttonText}>Go to Comment Box</Text>
+        <Text style={styles.homeButtonText}>Go to Comment Box</Text>
       </TouchableOpacity>
+
       <TouchableOpacity
         style={styles.homeButton}
         onPress={() => navigation.navigate('ChatBox')}
       >
-        <Text style={styles.buttonText}>Go to Chat Box</Text>
+        <Text style={styles.homeButtonText}>Go to Chat Box</Text>
       </TouchableOpacity>
     </View>
   );
 };
 
+// --- 2. CommentBoxScreen ---
 const CommentBoxScreen = ({ navigation }) => {
   const [comment, setComment] = useState('');
+  const [selectedImage, setSelectedImage] = useState(null);
   const [comments, setComments] = useState([]);
+  const [isPosting, setIsPosting] = useState(false);
+
+  const handleSelectImage = () => {
+    setSelectedImage(selectedImage ? null : MOCK_IMAGE);
+  };
 
   const postComment = () => {
-    if (comment.trim() !== '') {
-      setComments([...comments, comment.trim()]);
-      setComment('');
+    if (comment.trim() !== '' || selectedImage) {
+      setIsPosting(true);
+      const newComment = {
+        text: comment.trim(),
+        image: selectedImage,
+        timestamp: Date.now(),
+      };
+
+      setTimeout(() => {
+        setComments([newComment, ...comments]);
+        setComment('');
+        setSelectedImage(null);
+        setIsPosting(false);
+      }, 500);
     }
   };
 
@@ -56,50 +73,91 @@ const CommentBoxScreen = ({ navigation }) => {
       style={styles.screenContainer}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <Text style={styles.header}>Comment Box 🗨️</Text>
+      <ScrollView
+        style={styles.commentList}
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Text style={styles.screenTitle}>Comment Box 🗨️</Text>
 
-      <FlatList
-        data={comments}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.commentRow}>
-            <Image
-              source={require('./assets/naomiformalpic.jpg')}
-              style={styles.profilePic}
-            />
-            <Text style={styles.commentText}>{item}</Text>
+        {comments.map((item) => (
+          <View key={item.timestamp} style={styles.commentItem}>
+            <Image source={PROFILE_PIC} style={styles.commentProfilePic} />
+            <View style={styles.commentBubble}>
+              {item.image && <Image source={item.image} style={styles.commentImage} />}
+              <Text style={styles.commentText}>{item.text}</Text>
+            </View>
           </View>
-        )}
-      />
+        ))}
+      </ScrollView>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Write a comment..."
-        value={comment}
-        onChangeText={setComment}
-      />
-      <TouchableOpacity style={styles.button} onPress={postComment}>
-        <Text style={styles.buttonText}>Post</Text>
-      </TouchableOpacity>
+      {selectedImage && (
+        <View style={styles.imagePreview}>
+          <Image source={selectedImage} style={styles.previewImg} />
+          <Text style={styles.imageSelectedText}>Image Selected</Text>
+        </View>
+      )}
+
+      <View style={styles.inputRow}>
+        <TouchableOpacity
+          style={[
+            styles.selectPicButton,
+            { backgroundColor: selectedImage ? '#dc3545' : '#28a745' },
+          ]}
+          onPress={handleSelectImage}
+          disabled={isPosting}
+        >
+          <Text style={styles.selectPicText}>
+            {selectedImage ? 'Remove Pic' : 'Select Pic'}
+          </Text>
+        </TouchableOpacity>
+
+        <TextInput
+          style={styles.textArea}
+          placeholder="Write a comment..."
+          value={comment}
+          onChangeText={setComment}
+          editable={!isPosting}
+          multiline
+        />
+      </View>
 
       <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
+        style={[
+          styles.postButton,
+          (comment.trim() === '' && !selectedImage) || isPosting
+            ? styles.disabledButton
+            : styles.activeButton,
+        ]}
+        onPress={postComment}
+        disabled={(comment.trim() === '' && !selectedImage) || isPosting}
       >
+        <Text style={styles.postButtonText}>
+          {isPosting ? 'Posting...' : 'Post'}
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={() => navigation.navigate('Home')}>
         <Text style={styles.backText}>← Back to Home</Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>
   );
 };
 
+// --- 3. ChatBoxScreen ---
 const ChatBoxScreen = ({ navigation }) => {
   const [message, setMessage] = useState('');
   const [chat, setChat] = useState([]);
+  const [isSending, setIsSending] = useState(false);
 
   const sendMessage = () => {
     if (message.trim() !== '') {
-      setChat([...chat, message.trim()]);
-      setMessage('');
+      setIsSending(true);
+      setTimeout(() => {
+        setChat([...chat, message.trim()]);
+        setMessage('');
+        setIsSending(false);
+      }, 500);
     }
   };
 
@@ -108,145 +166,236 @@ const ChatBoxScreen = ({ navigation }) => {
       style={styles.screenContainer}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <Text style={styles.header}>Chat Box 💬</Text>
+      <Text style={styles.screenTitle}>Chat Box 💬</Text>
 
-      <FlatList
-        data={chat}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.chatRow}>
-            <Image
-              source={require('./assets/naomisings.jpg')}
-              style={styles.profilePic}
-            />
+      <ScrollView
+        style={styles.commentList}
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        {chat.map((item, index) => (
+          <View key={index} style={styles.chatItem}>
+            <Image source={PROFILE_PIC} style={styles.commentProfilePic} />
             <View style={styles.chatBubble}>
-              <Text style={styles.chatText}>{item}</Text>
+              <Text style={styles.commentText}>{item}</Text>
             </View>
           </View>
-        )}
-      />
+        ))}
+      </ScrollView>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Type a message..."
-        value={message}
-        onChangeText={setMessage}
-      />
-      <TouchableOpacity style={styles.button} onPress={sendMessage}>
-        <Text style={styles.buttonText}>Send</Text>
-      </TouchableOpacity>
+      <View style={styles.inputRow}>
+        <TextInput
+          style={styles.textArea}
+          placeholder="Type a message..."
+          value={message}
+          onChangeText={setMessage}
+          editable={!isSending}
+        />
+        <TouchableOpacity
+          style={[
+            styles.postButton,
+            message.trim() === '' || isSending
+              ? styles.disabledButton
+              : styles.activeButton,
+          ]}
+          onPress={sendMessage}
+          disabled={message.trim() === '' || isSending}
+        >
+          <Text style={styles.postButtonText}>
+            {isSending ? 'Sending...' : 'Send'}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-      >
+      <TouchableOpacity onPress={() => navigation.navigate('Home')}>
         <Text style={styles.backText}>← Back to Home</Text>
       </TouchableOpacity>
     </KeyboardAvoidingView>
   );
 };
 
+// --- Simple Router ---
+const Router = () => {
+  const [currentScreen, setCurrentScreen] = useState('Home');
+  const navigation = { navigate: setCurrentScreen };
+
+  switch (currentScreen) {
+    case 'CommentBox':
+      return <CommentBoxScreen navigation={navigation} />;
+    case 'ChatBox':
+      return <ChatBoxScreen navigation={navigation} />;
+    default:
+      return <HomeScreen navigation={navigation} />;
+  }
+};
+
 export default function App() {
-  return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="CommentBox" component={CommentBoxScreen} />
-        <Stack.Screen name="ChatBox" component={ChatBoxScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
+  return <Router />;
 }
 
+// --- Styles ---
 const styles = StyleSheet.create({
   homeContainer: {
     flex: 1,
+    backgroundColor: '#ffe6f0',
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#ffe6f0', // soft pink
     padding: 20,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 20,
-  },
-  homeButton: {
-    backgroundColor: '#007BFF',
-    padding: 15,
-    borderRadius: 10,
-    marginVertical: 10,
-    width: '80%',
-    alignItems: 'center',
   },
   homeProfilePic: {
     width: 180,
     height: 180,
     borderRadius: 90,
+    borderWidth: 4,
+    borderColor: 'white',
     marginBottom: 15,
+  },
+  homeTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 30,
+  },
+  homeButton: {
+    backgroundColor: '#007BFF',
+    paddingVertical: 15,
+    borderRadius: 15,
+    marginBottom: 15,
+    width: '80%',
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 5,
+  },
+  homeButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+    textAlign: 'center',
   },
   screenContainer: {
     flex: 1,
+    backgroundColor: '#fff0f5',
     padding: 20,
-    backgroundColor: '#fff0f5', // soft pink for chat & comment
   },
-  header: {
-    fontSize: 20,
-    fontWeight: '700',
+  screenTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#333',
     marginBottom: 15,
   },
-  input: {
-    borderWidth: 1,
-    borderColor: '#aaa',
-    padding: 10,
-    borderRadius: 8,
-    marginVertical: 10,
+  commentList: {
+    flex: 1,
   },
-  button: {
-    backgroundColor: '#007BFF',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  commentRow: {
+  commentItem: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
-  commentText: {
-    marginLeft: 10,
-    fontSize: 16,
-  },
-  chatRow: {
+  chatItem: {
     flexDirection: 'row',
+    marginBottom: 10,
     alignItems: 'flex-end',
-    marginBottom: 8,
   },
-  chatBubble: {
-    backgroundColor: '#e0f0ff',
-    borderRadius: 10,
-    padding: 10,
-    marginLeft: 8,
-    maxWidth: '80%',
-  },
-  chatText: {
-    fontSize: 16,
-  },
-  profilePic: {
+  commentProfilePic: {
     width: 50,
     height: 50,
     borderRadius: 25,
+    borderWidth: 2,
+    borderColor: '#FFC0CB',
+    marginRight: 8,
   },
-  backButton: {
-    marginTop: 20,
+  commentBubble: {
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    padding: 10,
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ffd1dc',
+  },
+  chatBubble: {
+    backgroundColor: '#e0f0ff',
+    borderRadius: 15,
+    padding: 10,
+    flexShrink: 1,
+  },
+  commentImage: {
+    width: '100%',
+    height: 120,
+    borderRadius: 10,
+    marginBottom: 5,
+  },
+  commentText: {
+    fontSize: 15,
+    color: '#333',
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginVertical: 10,
+  },
+  textArea: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#aaa',
+    borderRadius: 10,
+    padding: 10,
+    minHeight: 40,
+    maxHeight: 100,
+    backgroundColor: 'white',
+  },
+  postButton: {
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+  },
+  activeButton: {
+    backgroundColor: '#007BFF',
+  },
+  disabledButton: {
+    backgroundColor: '#ccc',
+  },
+  postButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  selectPicButton: {
+    padding: 10,
+    borderRadius: 10,
+  },
+  selectPicText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  imagePreview: {
+    flexDirection: 'row',
     alignItems: 'center',
+    padding: 5,
+    borderWidth: 1,
+    borderColor: '#FFC0CB',
+    backgroundColor: '#fff8f9',
+    borderRadius: 10,
+    marginBottom: 5,
+  },
+  previewImg: {
+    width: 70,
+    height: 50,
+    borderRadius: 8,
+    marginRight: 10,
+  },
+  imageSelectedText: {
+    color: '#e63946',
+    fontWeight: 'bold',
   },
   backText: {
     color: '#007BFF',
-    fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 10,
+    fontWeight: 'bold',
   },
 });
