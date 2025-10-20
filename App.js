@@ -11,11 +11,10 @@ import {
   Platform,
 } from 'react-native';
 
-// Use your own images from assets
 const PROFILE_PIC = require('./assets/naomiformalpic.jpg');
 const MOCK_IMAGE = require('./assets/naomisings.jpg');
 
-// --- 1. HomeScreen ---
+// --- HomeScreen ---
 const HomeScreen = ({ navigation }) => {
   return (
     <View style={styles.homeContainer}>
@@ -39,30 +38,23 @@ const HomeScreen = ({ navigation }) => {
   );
 };
 
-// --- 2. CommentBoxScreen ---
+// --- CommentBoxScreen ---
 const CommentBoxScreen = ({ navigation }) => {
   const [comment, setComment] = useState('');
-  const [selectedImage, setSelectedImage] = useState(null);
   const [comments, setComments] = useState([]);
   const [isPosting, setIsPosting] = useState(false);
 
-  const handleSelectImage = () => {
-    setSelectedImage(selectedImage ? null : MOCK_IMAGE);
-  };
-
   const postComment = () => {
-    if (comment.trim() !== '' || selectedImage) {
+    if (comment.trim() !== '') {
       setIsPosting(true);
       const newComment = {
         text: comment.trim(),
-        image: selectedImage,
         timestamp: Date.now(),
       };
 
       setTimeout(() => {
         setComments([newComment, ...comments]);
         setComment('');
-        setSelectedImage(null);
         setIsPosting(false);
       }, 500);
     }
@@ -80,62 +72,58 @@ const CommentBoxScreen = ({ navigation }) => {
       >
         <Text style={styles.screenTitle}>Comment Box 🗨️</Text>
 
-        {comments.map((item) => (
-          <View key={item.timestamp} style={styles.commentItem}>
+        {/* Facebook-style post box */}
+        <View style={styles.postBox}>
+          <View style={styles.postHeader}>
             <Image source={PROFILE_PIC} style={styles.commentProfilePic} />
-            <View style={styles.commentBubble}>
-              {item.image && <Image source={item.image} style={styles.commentImage} />}
-              <Text style={styles.commentText}>{item.text}</Text>
-            </View>
+            <Text style={styles.postUser}>Naomi 🌸</Text>
           </View>
-        ))}
-      </ScrollView>
 
-      {selectedImage && (
-        <View style={styles.imagePreview}>
-          <Image source={selectedImage} style={styles.previewImg} />
-          <Text style={styles.imageSelectedText}>Image Selected</Text>
+          {/* Posted image */}
+          <Image source={MOCK_IMAGE} style={styles.postImage} />
+
+          <Text style={styles.postCaption}>🎤 Naomi shared a moment!</Text>
+
+          {/* Comments under the post */}
+          <View style={styles.commentSection}>
+            {comments.map((item) => (
+              <View key={item.timestamp} style={styles.commentItem}>
+                <Image source={PROFILE_PIC} style={styles.commentProfilePicSmall} />
+                <View style={styles.commentBubble}>
+                  <Text style={styles.commentText}>{item.text}</Text>
+                </View>
+              </View>
+            ))}
+
+            {/* Comment input inside post */}
+            <View style={styles.inputRow}>
+              <TextInput
+                style={styles.textArea}
+                placeholder="Write a comment..."
+                value={comment}
+                onChangeText={setComment}
+                editable={!isPosting}
+                multiline
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.postButton,
+                comment.trim() === '' || isPosting
+                  ? styles.disabledButton
+                  : styles.activeButton,
+              ]}
+              onPress={postComment}
+              disabled={comment.trim() === '' || isPosting}
+            >
+              <Text style={styles.postButtonText}>
+                {isPosting ? 'Posting...' : 'Post Comment'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      )}
-
-      <View style={styles.inputRow}>
-        <TouchableOpacity
-          style={[
-            styles.selectPicButton,
-            { backgroundColor: selectedImage ? '#dc3545' : '#28a745' },
-          ]}
-          onPress={handleSelectImage}
-          disabled={isPosting}
-        >
-          <Text style={styles.selectPicText}>
-            {selectedImage ? 'Remove Pic' : 'Select Pic'}
-          </Text>
-        </TouchableOpacity>
-
-        <TextInput
-          style={styles.textArea}
-          placeholder="Write a comment..."
-          value={comment}
-          onChangeText={setComment}
-          editable={!isPosting}
-          multiline
-        />
-      </View>
-
-      <TouchableOpacity
-        style={[
-          styles.postButton,
-          (comment.trim() === '' && !selectedImage) || isPosting
-            ? styles.disabledButton
-            : styles.activeButton,
-        ]}
-        onPress={postComment}
-        disabled={(comment.trim() === '' && !selectedImage) || isPosting}
-      >
-        <Text style={styles.postButtonText}>
-          {isPosting ? 'Posting...' : 'Post'}
-        </Text>
-      </TouchableOpacity>
+      </ScrollView>
 
       <TouchableOpacity onPress={() => navigation.navigate('Home')}>
         <Text style={styles.backText}>← Back to Home</Text>
@@ -144,7 +132,7 @@ const CommentBoxScreen = ({ navigation }) => {
   );
 };
 
-// --- 3. ChatBoxScreen ---
+// --- ChatBoxScreen ---
 const ChatBoxScreen = ({ navigation }) => {
   const [message, setMessage] = useState('');
   const [chat, setChat] = useState([]);
@@ -262,10 +250,6 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     marginBottom: 15,
     width: '80%',
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 5,
   },
   homeButtonText: {
     color: '#fff',
@@ -285,17 +269,44 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 15,
   },
-  commentList: {
-    flex: 1,
+  postBox: {
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    padding: 10,
+    borderWidth: 1,
+    borderColor: '#ffd1dc',
+    marginBottom: 15,
+  },
+  postHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  postUser: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginLeft: 10,
+    color: '#333',
+  },
+  postImage: {
+    width: '100%',
+    height: 220,
+    borderRadius: 10,
+    marginBottom: 8,
+  },
+  postCaption: {
+    fontSize: 15,
+    marginBottom: 10,
+    color: '#444',
+  },
+  commentSection: {
+    borderTopWidth: 1,
+    borderTopColor: '#ffd1dc',
+    paddingTop: 10,
   },
   commentItem: {
     flexDirection: 'row',
     marginBottom: 10,
-  },
-  chatItem: {
-    flexDirection: 'row',
-    marginBottom: 10,
-    alignItems: 'flex-end',
   },
   commentProfilePic: {
     width: 50,
@@ -305,25 +316,21 @@ const styles = StyleSheet.create({
     borderColor: '#FFC0CB',
     marginRight: 8,
   },
+  commentProfilePicSmall: {
+    width: 35,
+    height: 35,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#FFC0CB',
+    marginRight: 8,
+  },
   commentBubble: {
     backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 10,
+    borderRadius: 10,
+    padding: 8,
     flex: 1,
     borderWidth: 1,
     borderColor: '#ffd1dc',
-  },
-  chatBubble: {
-    backgroundColor: '#e0f0ff',
-    borderRadius: 15,
-    padding: 10,
-    flexShrink: 1,
-  },
-  commentImage: {
-    width: '100%',
-    height: 120,
-    borderRadius: 10,
-    marginBottom: 5,
   },
   commentText: {
     fontSize: 15,
@@ -332,8 +339,7 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 10,
-    marginVertical: 10,
+    marginTop: 5,
   },
   textArea: {
     flex: 1,
@@ -341,18 +347,16 @@ const styles = StyleSheet.create({
     borderColor: '#aaa',
     borderRadius: 10,
     padding: 10,
+    backgroundColor: 'white',
     minHeight: 40,
     maxHeight: 100,
-    backgroundColor: 'white',
   },
   postButton: {
+    alignSelf: 'flex-end',
+    marginTop: 8,
     paddingHorizontal: 15,
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderRadius: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
   },
   activeButton: {
     backgroundColor: '#007BFF',
@@ -362,34 +366,6 @@ const styles = StyleSheet.create({
   },
   postButtonText: {
     color: '#fff',
-    fontWeight: 'bold',
-  },
-  selectPicButton: {
-    padding: 10,
-    borderRadius: 10,
-  },
-  selectPicText: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  imagePreview: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 5,
-    borderWidth: 1,
-    borderColor: '#FFC0CB',
-    backgroundColor: '#fff8f9',
-    borderRadius: 10,
-    marginBottom: 5,
-  },
-  previewImg: {
-    width: 70,
-    height: 50,
-    borderRadius: 8,
-    marginRight: 10,
-  },
-  imageSelectedText: {
-    color: '#e63946',
     fontWeight: 'bold',
   },
   backText: {
