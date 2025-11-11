@@ -1,26 +1,32 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
-const PROFILE_PIC = require('../assets/naomiformalpic.jpg');
+const HomeScreen = ({ navigation, route }) => {
+  const username = route.params?.username;
 
-const HomeScreen = ({ navigation }) => {
   return (
-    <View style={styles.homeContainer}>
-      <Image source={PROFILE_PIC} style={styles.homeProfilePic} />
-      <Text style={styles.homeTitle}>Welcome, Naomi 🌸</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>Welcome, {username} 🌸</Text>
 
       <TouchableOpacity
-        style={styles.homeButton}
+        style={styles.navButton}
         onPress={() => navigation.navigate('CommentBox')}
       >
-        <Text style={styles.homeButtonText}>Go to Comment Box</Text>
+        <Text style={styles.navButtonText}>Go to Comment Box</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
-        style={styles.homeButton}
-        onPress={() => navigation.navigate('ChatBox')}
+        style={styles.navButton}
+        onPress={() => navigation.navigate('ChatBox', { username })}
       >
-        <Text style={styles.homeButtonText}>Go to Chat Box</Text>
+        <Text style={styles.navButtonText}>Go to Chat Box</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.logoutButton}
+        onPress={() => navigation.replace('Login')}
+      >
+        <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>
     </View>
   );
@@ -29,38 +35,40 @@ const HomeScreen = ({ navigation }) => {
 export default HomeScreen;
 
 const styles = StyleSheet.create({
-  homeContainer: {
+  container: {
     flex: 1,
     backgroundColor: '#ffe6f0',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
   },
-  homeProfilePic: {
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    borderWidth: 4,
-    borderColor: 'white',
-    marginBottom: 15,
-  },
-  homeTitle: {
+  title: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
     marginBottom: 30,
   },
-  homeButton: {
+  navButton: {
+    width: '80%',
     backgroundColor: '#007BFF',
     paddingVertical: 15,
     borderRadius: 15,
     marginBottom: 15,
-    width: '80%',
   },
-  homeButtonText: {
+  navButtonText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 16,
+    textAlign: 'center',
+  },
+  logoutButton: {
+    marginTop: 20,
+    width: '50%',
+    backgroundColor: '#FF4D4D',
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  logoutText: {
+    color: '#fff',
+    fontWeight: 'bold',
     textAlign: 'center',
   },
 });
