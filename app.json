@@ -1,32 +1,53 @@
 {
   "expo": {
-    "name": "MidAct1",
-    "slug": "MidAct1",
+    "name": "Cano_N",
+    "slug": "Cano_N",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/myicon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/myicon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#FFB6E1"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.naomicano.CanoChatApp"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/myicon.png",
+        "backgroundColor": "#FFB6E1"
       },
-      "edgeToEdgeEnabled": true
+      "permissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "softwareKeyboardLayoutMode": "pan",
+      "edgeToEdgeEnabled": true,
+      "package": "com.naomicano.CanoChatApp"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/myicon.png"
     },
     "plugins": [
-      "expo-sqlite"
-    ]
+      "expo-sqlite",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app accesses your photos to let you share them with friends."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9f538512-64d5-4a2c-b9c2-038041a41341"
+      }
+    },
+    "owner": "nayuminam"
   }
 }
